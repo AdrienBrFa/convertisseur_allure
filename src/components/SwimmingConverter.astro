@@ -1,0 +1,295 @@
+---
+// Swimming Converter Component
+---
+
+<div class="converter-section">
+  <h2>🏊 Swimming Pace Converter</h2>
+  
+  <div class="converter-grid">
+    <div class="input-group">
+      <label for="swim-distance">Distance</label>
+      <div class="input-with-unit">
+        <input type="number" id="swim-distance" step="0.01" min="0" placeholder="0" />
+        <select id="swim-distance-unit">
+          <option value="m">m</option>
+          <option value="km">km</option>
+          <option value="yd">yd</option>
+          <option value="mi">mi</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="swim-time">Time</label>
+      <div class="time-inputs">
+        <input type="number" id="swim-hours" min="0" max="23" placeholder="0" />
+        <span>:</span>
+        <input type="number" id="swim-minutes" min="0" max="59" placeholder="0" />
+        <span>:</span>
+        <input type="number" id="swim-seconds" min="0" max="59" placeholder="0" />
+      </div>
+      <div class="time-labels">
+        <span>h</span>
+        <span></span>
+        <span>m</span>
+        <span></span>
+        <span>s</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="swim-pace">Pace</label>
+      <div class="input-with-unit">
+        <input type="text" id="swim-pace" placeholder="0:00" readonly />
+        <select id="swim-pace-unit">
+          <option value="min/100m">min/100m</option>
+          <option value="min/100yd">min/100yd</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="swim-speed">Speed</label>
+      <div class="input-with-unit">
+        <input type="text" id="swim-speed" placeholder="0.00" readonly />
+        <select id="swim-speed-unit">
+          <option value="km/h">km/h</option>
+          <option value="mph">mph</option>
+          <option value="m/s">m/s</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button class="btn btn-primary" id="swim-calculate">Calculate</button>
+    <button class="btn btn-secondary" id="swim-reset">Reset</button>
+  </div>
+</div>
+
+<style>
+  .converter-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+
+  .converter-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .converter-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-color);
+  }
+
+  .input-with-unit {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .input-with-unit input {
+    flex: 1;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: white;
+  }
+
+  select {
+    min-width: 100px;
+    cursor: pointer;
+  }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .time-inputs input {
+    flex: 1;
+    text-align: center;
+  }
+
+  .time-inputs span {
+    font-weight: bold;
+    color: var(--text-color);
+  }
+
+  .time-labels {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  .time-labels span:nth-child(1),
+  .time-labels span:nth-child(3),
+  .time-labels span:nth-child(5) {
+    flex: 1;
+    text-align: center;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .btn-primary {
+    background: var(--secondary-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0284c7;
+  }
+
+  .btn-secondary {
+    background: #e5e7eb;
+    color: var(--text-color);
+  }
+
+  .btn-secondary:hover {
+    background: #d1d5db;
+  }
+</style>
+
+<script>
+  // Swimming Converter Logic
+  const swimDistance = document.getElementById('swim-distance') as HTMLInputElement;
+  const swimDistanceUnit = document.getElementById('swim-distance-unit') as HTMLSelectElement;
+  const swimHours = document.getElementById('swim-hours') as HTMLInputElement;
+  const swimMinutes = document.getElementById('swim-minutes') as HTMLInputElement;
+  const swimSeconds = document.getElementById('swim-seconds') as HTMLInputElement;
+  const swimPace = document.getElementById('swim-pace') as HTMLInputElement;
+  const swimPaceUnit = document.getElementById('swim-pace-unit') as HTMLSelectElement;
+  const swimSpeed = document.getElementById('swim-speed') as HTMLInputElement;
+  const swimSpeedUnit = document.getElementById('swim-speed-unit') as HTMLSelectElement;
+  const swimCalculate = document.getElementById('swim-calculate') as HTMLButtonElement;
+  const swimReset = document.getElementById('swim-reset') as HTMLButtonElement;
+
+  function convertDistanceToMeters(distance: number, unit: string): number {
+    switch (unit) {
+      case 'm': return distance;
+      case 'km': return distance * 1000;
+      case 'yd': return distance * 0.9144;
+      case 'mi': return distance * 1609.34;
+      default: return distance;
+    }
+  }
+
+  function convertMetersToDistance(meters: number, unit: string): number {
+    switch (unit) {
+      case 'm': return meters;
+      case 'km': return meters / 1000;
+      case 'yd': return meters / 0.9144;
+      case 'mi': return meters / 1609.34;
+      default: return meters;
+    }
+  }
+
+  function getTimeInSeconds(): number {
+    const h = parseInt(swimHours.value) || 0;
+    const m = parseInt(swimMinutes.value) || 0;
+    const s = parseInt(swimSeconds.value) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  function formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function calculateSwimming() {
+    const distance = parseFloat(swimDistance.value);
+    const timeInSeconds = getTimeInSeconds();
+
+    if (!distance || distance <= 0 || !timeInSeconds || timeInSeconds <= 0) {
+      alert('Please enter valid distance and time values');
+      return;
+    }
+
+    const distanceInMeters = convertDistanceToMeters(distance, swimDistanceUnit.value);
+    
+    // Calculate pace (min/100m or min/100yd)
+    const paceUnit = swimPaceUnit.value;
+    let paceDistance = distanceInMeters / 100; // per 100m
+    if (paceUnit === 'min/100yd') {
+      paceDistance = (distanceInMeters / 0.9144) / 100; // per 100yd
+    }
+    const paceInSeconds = timeInSeconds / paceDistance;
+    swimPace.value = formatTime(paceInSeconds);
+
+    // Calculate speed
+    const speedUnit = swimSpeedUnit.value;
+    let speed = 0;
+    if (speedUnit === 'km/h') {
+      speed = ((distanceInMeters / 1000) / timeInSeconds) * 3600;
+    } else if (speedUnit === 'mph') {
+      speed = ((distanceInMeters / 1609.34) / timeInSeconds) * 3600;
+    } else if (speedUnit === 'm/s') {
+      speed = distanceInMeters / timeInSeconds;
+    }
+    swimSpeed.value = speed.toFixed(2);
+  }
+
+  function resetSwimming() {
+    swimDistance.value = '';
+    swimHours.value = '';
+    swimMinutes.value = '';
+    swimSeconds.value = '';
+    swimPace.value = '';
+    swimSpeed.value = '';
+  }
+
+  swimCalculate?.addEventListener('click', calculateSwimming);
+  swimReset?.addEventListener('click', resetSwimming);
+
+  // Recalculate on unit change
+  swimDistanceUnit?.addEventListener('change', () => {
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
+  });
+  swimPaceUnit?.addEventListener('change', () => {
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
+  });
+  swimSpeedUnit?.addEventListener('change', () => {
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
+  });
+</script>
