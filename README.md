@@ -42,3 +42,8 @@ Live site: https://AdrienBrFa.github.io/convertisseur_allure/
 
 MIT
 
+## 📝 Upcoming feature
+I would like to implement some more features : 
+- Tables of conversion for round data (5km, 10km, 20km, Semis, Marathons --> 3'00 / 3'30 / 4'00 / 4'30 / 5'00 / 5'30 / 6'00 / 6'30 / 7'00)
+- Index menu with page selection (table running, converter running, table swin, converter swin)
+- ...
