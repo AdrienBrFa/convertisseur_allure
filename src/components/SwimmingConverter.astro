@@ -284,12 +284,12 @@
 
   // Recalculate on unit change
   swimDistanceUnit?.addEventListener('change', () => {
-    if (swimDistance.value && swimPace.value) calculateSwimming();
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
   });
   swimPaceUnit?.addEventListener('change', () => {
-    if (swimDistance.value && swimPace.value) calculateSwimming();
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
   });
   swimSpeedUnit?.addEventListener('change', () => {
-    if (swimDistance.value && swimSpeed.value) calculateSwimming();
+    if (swimDistance.value && getTimeInSeconds() > 0) calculateSwimming();
   });
 </script>

@@ -281,12 +281,12 @@
 
   // Recalculate on unit change
   runDistanceUnit?.addEventListener('change', () => {
-    if (runDistance.value && runPace.value) calculateRunning();
+    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
   });
   runPaceUnit?.addEventListener('change', () => {
-    if (runDistance.value && runPace.value) calculateRunning();
+    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
   });
   runSpeedUnit?.addEventListener('change', () => {
-    if (runDistance.value && runSpeed.value) calculateRunning();
+    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
   });
 </script>
