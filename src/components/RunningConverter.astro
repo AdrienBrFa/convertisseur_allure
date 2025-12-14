@@ -1,0 +1,292 @@
+---
+// Running Converter Component
+---
+
+<div class="converter-section">
+  <h2>🏃 Running Pace Converter</h2>
+  
+  <div class="converter-grid">
+    <div class="input-group">
+      <label for="run-distance">Distance</label>
+      <div class="input-with-unit">
+        <input type="number" id="run-distance" step="0.01" min="0" placeholder="0" />
+        <select id="run-distance-unit">
+          <option value="km">km</option>
+          <option value="m">m</option>
+          <option value="mi">mi</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="run-time">Time</label>
+      <div class="time-inputs">
+        <input type="number" id="run-hours" min="0" max="23" placeholder="0" />
+        <span>:</span>
+        <input type="number" id="run-minutes" min="0" max="59" placeholder="0" />
+        <span>:</span>
+        <input type="number" id="run-seconds" min="0" max="59" placeholder="0" />
+      </div>
+      <div class="time-labels">
+        <span>h</span>
+        <span></span>
+        <span>m</span>
+        <span></span>
+        <span>s</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="run-pace">Pace</label>
+      <div class="input-with-unit">
+        <input type="text" id="run-pace" placeholder="0:00" readonly />
+        <select id="run-pace-unit">
+          <option value="min/km">min/km</option>
+          <option value="min/mi">min/mi</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="run-speed">Speed</label>
+      <div class="input-with-unit">
+        <input type="text" id="run-speed" placeholder="0.00" readonly />
+        <select id="run-speed-unit">
+          <option value="km/h">km/h</option>
+          <option value="mph">mph</option>
+          <option value="m/s">m/s</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button class="btn btn-primary" id="run-calculate">Calculate</button>
+    <button class="btn btn-secondary" id="run-reset">Reset</button>
+  </div>
+</div>
+
+<style>
+  .converter-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+
+  .converter-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .converter-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-color);
+  }
+
+  .input-with-unit {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .input-with-unit input {
+    flex: 1;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: white;
+  }
+
+  select {
+    min-width: 100px;
+    cursor: pointer;
+  }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .time-inputs input {
+    flex: 1;
+    text-align: center;
+  }
+
+  .time-inputs span {
+    font-weight: bold;
+    color: var(--text-color);
+  }
+
+  .time-labels {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  .time-labels span:nth-child(1),
+  .time-labels span:nth-child(3),
+  .time-labels span:nth-child(5) {
+    flex: 1;
+    text-align: center;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .btn-primary {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+  }
+
+  .btn-secondary {
+    background: #e5e7eb;
+    color: var(--text-color);
+  }
+
+  .btn-secondary:hover {
+    background: #d1d5db;
+  }
+</style>
+
+<script>
+  // Running Converter Logic
+  const runDistance = document.getElementById('run-distance') as HTMLInputElement;
+  const runDistanceUnit = document.getElementById('run-distance-unit') as HTMLSelectElement;
+  const runHours = document.getElementById('run-hours') as HTMLInputElement;
+  const runMinutes = document.getElementById('run-minutes') as HTMLInputElement;
+  const runSeconds = document.getElementById('run-seconds') as HTMLInputElement;
+  const runPace = document.getElementById('run-pace') as HTMLInputElement;
+  const runPaceUnit = document.getElementById('run-pace-unit') as HTMLSelectElement;
+  const runSpeed = document.getElementById('run-speed') as HTMLInputElement;
+  const runSpeedUnit = document.getElementById('run-speed-unit') as HTMLSelectElement;
+  const runCalculate = document.getElementById('run-calculate') as HTMLButtonElement;
+  const runReset = document.getElementById('run-reset') as HTMLButtonElement;
+
+  function convertDistanceToKm(distance: number, unit: string): number {
+    switch (unit) {
+      case 'km': return distance;
+      case 'm': return distance / 1000;
+      case 'mi': return distance * 1.60934;
+      default: return distance;
+    }
+  }
+
+  function convertKmToDistance(km: number, unit: string): number {
+    switch (unit) {
+      case 'km': return km;
+      case 'm': return km * 1000;
+      case 'mi': return km / 1.60934;
+      default: return km;
+    }
+  }
+
+  function getTimeInSeconds(): number {
+    const h = parseInt(runHours.value) || 0;
+    const m = parseInt(runMinutes.value) || 0;
+    const s = parseInt(runSeconds.value) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  function formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function calculateRunning() {
+    const distance = parseFloat(runDistance.value);
+    const timeInSeconds = getTimeInSeconds();
+
+    if (!distance || distance <= 0 || !timeInSeconds || timeInSeconds <= 0) {
+      alert('Please enter valid distance and time values');
+      return;
+    }
+
+    const distanceInKm = convertDistanceToKm(distance, runDistanceUnit.value);
+    
+    // Calculate pace (min/km or min/mi)
+    const paceUnit = runPaceUnit.value;
+    let paceDistance = distanceInKm;
+    if (paceUnit === 'min/mi') {
+      paceDistance = distanceInKm / 1.60934;
+    }
+    const paceInSeconds = timeInSeconds / paceDistance;
+    runPace.value = formatTime(paceInSeconds);
+
+    // Calculate speed
+    const speedUnit = runSpeedUnit.value;
+    let speed = 0;
+    if (speedUnit === 'km/h') {
+      speed = (distanceInKm / timeInSeconds) * 3600;
+    } else if (speedUnit === 'mph') {
+      speed = ((distanceInKm / 1.60934) / timeInSeconds) * 3600;
+    } else if (speedUnit === 'm/s') {
+      speed = (distanceInKm * 1000) / timeInSeconds;
+    }
+    runSpeed.value = speed.toFixed(2);
+  }
+
+  function resetRunning() {
+    runDistance.value = '';
+    runHours.value = '';
+    runMinutes.value = '';
+    runSeconds.value = '';
+    runPace.value = '';
+    runSpeed.value = '';
+  }
+
+  runCalculate?.addEventListener('click', calculateRunning);
+  runReset?.addEventListener('click', resetRunning);
+
+  // Recalculate on unit change
+  runDistanceUnit?.addEventListener('change', () => {
+    if (runDistance.value && runPace.value) calculateRunning();
+  });
+  runPaceUnit?.addEventListener('change', () => {
+    if (runDistance.value && runPace.value) calculateRunning();
+  });
+  runSpeedUnit?.addEventListener('change', () => {
+    if (runDistance.value && runSpeed.value) calculateRunning();
+  });
+</script>

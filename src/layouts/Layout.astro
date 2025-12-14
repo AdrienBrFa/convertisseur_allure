@@ -1,0 +1,73 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Convert between pace, speed, time, and distance for running and swimming" } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href={`${baseUrl}/favicon.svg`} />
+    <title>{title}</title>
+    <style is:global>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #0ea5e9;
+        --text-color: #1f2937;
+        --bg-color: #ffffff;
+        --border-color: #e5e7eb;
+        --success-color: #10b981;
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+      }
+
+      h1, h2, h3 {
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: clamp(1.75rem, 5vw, 2.5rem);
+      }
+
+      h2 {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        margin-bottom: 1.5rem;
+      }
+
+      input, select, button {
+        font-family: inherit;
+        font-size: 1rem;
+      }
+
+      input:focus, select:focus, button:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
