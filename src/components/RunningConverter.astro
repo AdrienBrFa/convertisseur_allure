@@ -10,11 +10,13 @@
       <option value="distance-time">Distance + Time → Pace</option>
       <option value="pace-distance">Pace + Distance → Time</option>
       <option value="pace-time">Pace + Time → Distance</option>
+      <option value="speed-time">Speed + Time → Distance</option>
+      <option value="speed-distance">Speed + Distance → Time</option>
     </select>
   </div>
   
-  <div class="converter-grid">
-    <div class="input-group">
+  <div class="converter-grid" id="run-grid">
+    <div class="input-group" data-field="distance">
       <label for="run-distance">Distance</label>
       <div class="input-with-unit">
         <input type="number" id="run-distance" step="0.01" min="0" placeholder="0" />
@@ -26,7 +28,7 @@
       </div>
     </div>
 
-    <div class="input-group">
+    <div class="input-group" data-field="time">
       <label for="run-time">Time</label>
       <div class="time-inputs">
         <input type="number" id="run-hours" min="0" max="23" placeholder="0" />
@@ -44,7 +46,7 @@
       </div>
     </div>
 
-    <div class="input-group">
+    <div class="input-group" data-field="pace">
       <label for="run-pace">Pace</label>
       <div class="input-with-unit">
         <input type="text" id="run-pace" placeholder="0:00" readonly />
@@ -55,7 +57,7 @@
       </div>
     </div>
 
-    <div class="input-group">
+    <div class="input-group" data-field="speed">
       <label for="run-speed">Speed</label>
       <div class="input-with-unit">
         <input type="text" id="run-speed" placeholder="0.00" readonly />
@@ -67,11 +69,6 @@
       </div>
     </div>
   </div>
-
-  <div class="button-group">
-    <button class="btn btn-primary" id="run-calculate">Calculate</button>
-    <button class="btn btn-secondary" id="run-reset">Reset</button>
-  </div>
 </div>
 
 <style>
@@ -81,7 +78,7 @@
     padding: 2rem;
     box-shadow: var(--shadow);
     margin: 0 auto 2rem;
-    max-width: 720px;
+    max-width: 900px;
   }
 
   .converter-grid {
@@ -103,12 +100,6 @@
     }
   }
 
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
   label {
     font-weight: 500;
     font-size: 0.95rem;
@@ -122,6 +113,7 @@
 
   .input-with-unit input {
     flex: 1;
+    min-width: 0;
   }
 
   input[type="number"],
@@ -134,8 +126,11 @@
   }
 
   select {
-    min-width: 100px;
+    min-width: 85px;
     cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .time-inputs {
@@ -169,40 +164,47 @@
     text-align: center;
   }
 
-  .button-group {
+  /* Reordering by mode */
+  .converter-grid {
     display: flex;
-    gap: 1rem;
     flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .btn {
-    padding: 0.75rem 2rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex: 1;
-    min-width: 120px;
+  .input-group {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .btn-primary {
-    background: var(--primary-color);
-    color: white;
-  }
+  .converter-grid.mode-distance-time [data-field="distance"] { order: 1; }
+  .converter-grid.mode-distance-time [data-field="time"] { order: 2; }
+  .converter-grid.mode-distance-time [data-field="pace"] { order: 3; }
+  .converter-grid.mode-distance-time [data-field="speed"] { order: 4; }
 
-  .btn-primary:hover {
-    background: #1d4ed8;
-  }
+  .converter-grid.mode-pace-distance [data-field="pace"] { order: 1; }
+  .converter-grid.mode-pace-distance [data-field="distance"] { order: 2; }
+  .converter-grid.mode-pace-distance [data-field="time"] { order: 3; }
+  .converter-grid.mode-pace-distance [data-field="speed"] { order: 4; }
 
-  .btn-secondary {
-    background: #e5e7eb;
-    color: var(--text-color);
-  }
+  .converter-grid.mode-pace-time [data-field="pace"] { order: 1; }
+  .converter-grid.mode-pace-time [data-field="time"] { order: 2; }
+  .converter-grid.mode-pace-time [data-field="distance"] { order: 3; }
+  .converter-grid.mode-pace-time [data-field="speed"] { order: 4; }
 
-  .btn-secondary:hover {
-    background: #d1d5db;
-  }
+  .converter-grid.mode-speed-time [data-field="speed"] { order: 1; }
+  .converter-grid.mode-speed-time [data-field="time"] { order: 2; }
+  .converter-grid.mode-speed-time [data-field="distance"] { order: 3; }
+  .converter-grid.mode-speed-time [data-field="pace"] { order: 4; }
+
+  .converter-grid.mode-speed-distance [data-field="speed"] { order: 1; }
+  .converter-grid.mode-speed-distance [data-field="distance"] { order: 2; }
+  .converter-grid.mode-speed-distance [data-field="time"] { order: 3; }
+  .converter-grid.mode-speed-distance [data-field="pace"] { order: 4; }
+
 
   @media (max-width: 640px) {
     .converter-section {
@@ -214,8 +216,18 @@
       align-items: flex-start;
     }
 
-    .button-group {
-      flex-direction: column;
+    .input-group {
+      flex: 0 0 100%;
+    }
+
+    .input-with-unit input {
+      flex: 1;
+      padding: 0.5rem;
+    }
+
+    .input-with-unit select {
+      flex: 0 0 auto;
+      min-width: 0;
     }
   }
 </style>
@@ -231,9 +243,14 @@
   const runPaceUnit = document.getElementById('run-pace-unit') as HTMLSelectElement;
   const runSpeed = document.getElementById('run-speed') as HTMLInputElement;
   const runSpeedUnit = document.getElementById('run-speed-unit') as HTMLSelectElement;
-  const runCalculate = document.getElementById('run-calculate') as HTMLButtonElement;
-  const runReset = document.getElementById('run-reset') as HTMLButtonElement;
   const runMode = document.getElementById('run-mode') as HTMLSelectElement;
+  const runGrid = document.getElementById('run-grid') as HTMLElement;
+
+  function updateModeClass() {
+    const mode = runMode?.value || 'distance-time';
+    runGrid?.classList.remove('mode-distance-time', 'mode-pace-distance', 'mode-pace-time', 'mode-speed-time', 'mode-speed-distance');
+    runGrid?.classList.add(`mode-${mode}`);
+  }
 
   function convertDistanceToKm(distance: number, unit: string): number {
     switch (unit) {
@@ -286,15 +303,17 @@
   function setReadonlyStates() {
     const mode = runMode?.value || 'distance-time';
     const editable = {
-      distance: mode !== 'pace-time',
-      time: mode !== 'pace-distance',
-      pace: mode !== 'distance-time'
+      distance: mode !== 'pace-time' && mode !== 'speed-time',
+      time: mode !== 'pace-distance' && mode !== 'speed-distance',
+      pace: mode !== 'distance-time',
+      speed: mode === 'speed-time' || mode === 'speed-distance'
     };
     runDistance.readOnly = !editable.distance;
     runHours.readOnly = !editable.time;
     runMinutes.readOnly = !editable.time;
     runSeconds.readOnly = !editable.time;
     runPace.readOnly = !editable.pace;
+    runSpeed.readOnly = !editable.speed;
   }
 
   function calculateRunning() {
@@ -330,11 +349,58 @@
       const km = timeInSeconds / secPerKm;
       const dist = convertKmToDistance(km, runDistanceUnit.value);
       runDistance.value = String(Number(dist.toFixed(2)));
+    } else if (mode === 'speed-time') {
+      if (!timeInSeconds || timeInSeconds <= 0) return;
+      const speedValue = parseFloat(runSpeed.value);
+      if (isNaN(speedValue) || speedValue <= 0) return;
+      const speedUnit = runSpeedUnit.value;
+      let kmPerHour = 0;
+      if (speedUnit === 'km/h') {
+        kmPerHour = speedValue;
+      } else if (speedUnit === 'mph') {
+        kmPerHour = speedValue * 1.60934;
+      } else if (speedUnit === 'm/s') {
+        kmPerHour = speedValue * 3.6;
+      }
+      const km = (kmPerHour * timeInSeconds) / 3600;
+      const dist = convertKmToDistance(km, runDistanceUnit.value);
+      runDistance.value = String(Number(dist.toFixed(2)));
+    } else if (mode === 'speed-distance') {
+      if (!distanceInKm || distanceInKm <= 0) return;
+      const speedValue = parseFloat(runSpeed.value);
+      if (isNaN(speedValue) || speedValue <= 0) return;
+      const speedUnit = runSpeedUnit.value;
+      let kmPerHour = 0;
+      if (speedUnit === 'km/h') {
+        kmPerHour = speedValue;
+      } else if (speedUnit === 'mph') {
+        kmPerHour = speedValue * 1.60934;
+      } else if (speedUnit === 'm/s') {
+        kmPerHour = speedValue * 3.6;
+      }
+      const totalSeconds = (distanceInKm / kmPerHour) * 3600;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+      runHours.value = String(h);
+      runMinutes.value = String(m);
+      runSeconds.value = String(s);
+    }
+
+    // Calculate pace when we have distance and time
+    const haveDistance = !isNaN(distanceInKm) && distanceInKm > 0;
+    const haveTime = timeInSeconds > 0;
+    if (haveDistance && haveTime) {
+      const paceUnit = runPaceUnit.value;
+      let paceDistance = distanceInKm;
+      if (paceUnit === 'min/mi') paceDistance = distanceInKm / 1.60934;
+      const paceInSeconds = timeInSeconds / paceDistance;
+      runPace.value = formatTime(paceInSeconds);
+    } else {
+      runPace.value = '';
     }
 
     // Calculate speed when we have both distance and time
-    const haveDistance = !isNaN(distanceInKm) && distanceInKm > 0;
-    const haveTime = timeInSeconds > 0;
     if (haveDistance && haveTime) {
       const speedUnit = runSpeedUnit.value;
       let speed = 0;
@@ -360,9 +426,8 @@
     runSpeed.value = '';
   }
 
-  runCalculate?.addEventListener('click', calculateRunning);
-  runReset?.addEventListener('click', resetRunning);
-  runMode?.addEventListener('change', () => { setReadonlyStates(); calculateRunning(); });
+  runMode?.addEventListener('change', () => { setReadonlyStates(); updateModeClass(); calculateRunning(); });
+  updateModeClass();
   setReadonlyStates();
 
   // Recalculate on unit change
