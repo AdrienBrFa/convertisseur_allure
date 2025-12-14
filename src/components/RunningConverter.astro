@@ -4,6 +4,14 @@
 
 <div class="converter-section">
   <h2>🏃 Running Pace Converter</h2>
+  <div class="mode-select">
+    <label for="run-mode">Mode</label>
+    <select id="run-mode">
+      <option value="distance-time">Distance + Time → Pace</option>
+      <option value="pace-distance">Pace + Distance → Time</option>
+      <option value="pace-time">Pace + Time → Distance</option>
+    </select>
+  </div>
   
   <div class="converter-grid">
     <div class="input-group">
@@ -72,13 +80,21 @@
     border-radius: 1rem;
     padding: 2rem;
     box-shadow: var(--shadow);
-    margin-bottom: 2rem;
+    margin: 0 auto 2rem;
+    max-width: 720px;
   }
 
   .converter-grid {
     display: grid;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
+  }
+
+  .mode-select {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
   }
 
   @media (min-width: 768px) {
@@ -187,6 +203,21 @@
   .btn-secondary:hover {
     background: #d1d5db;
   }
+
+  @media (max-width: 640px) {
+    .converter-section {
+      padding: 1.5rem;
+    }
+
+    .mode-select {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .button-group {
+      flex-direction: column;
+    }
+  }
 </style>
 
 <script>
@@ -202,6 +233,7 @@
   const runSpeedUnit = document.getElementById('run-speed-unit') as HTMLSelectElement;
   const runCalculate = document.getElementById('run-calculate') as HTMLButtonElement;
   const runReset = document.getElementById('run-reset') as HTMLButtonElement;
+  const runMode = document.getElementById('run-mode') as HTMLSelectElement;
 
   function convertDistanceToKm(distance: number, unit: string): number {
     switch (unit) {
@@ -234,37 +266,89 @@
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
+  function parsePaceToSecondsPerKm(): number | null {
+    // Expects runPace.value like mm:ss and unit in runPaceUnit
+    const val = (runPace.value || '').trim();
+    if (!val) return null;
+    const parts = val.split(':');
+    if (parts.length !== 2) return null;
+    const m = parseInt(parts[0]);
+    const s = parseInt(parts[1]);
+    if (isNaN(m) || isNaN(s)) return null;
+    const secPerUnit = m * 60 + s;
+    // Convert to seconds per km if unit is min/mi
+    if (runPaceUnit.value === 'min/mi') {
+      return secPerUnit / 1.60934;
+    }
+    return secPerUnit; // min/km
+  }
+
+  function setReadonlyStates() {
+    const mode = runMode?.value || 'distance-time';
+    const editable = {
+      distance: mode !== 'pace-time',
+      time: mode !== 'pace-distance',
+      pace: mode !== 'distance-time'
+    };
+    runDistance.readOnly = !editable.distance;
+    runHours.readOnly = !editable.time;
+    runMinutes.readOnly = !editable.time;
+    runSeconds.readOnly = !editable.time;
+    runPace.readOnly = !editable.pace;
+  }
+
   function calculateRunning() {
+    const mode = runMode?.value || 'distance-time';
     const distance = parseFloat(runDistance.value);
     const timeInSeconds = getTimeInSeconds();
+    const distanceInKm = !isNaN(distance) ? convertDistanceToKm(distance, runDistanceUnit.value) : NaN;
 
-    if (!distance || distance <= 0 || !timeInSeconds || timeInSeconds <= 0) {
-      alert('Please enter valid distance and time values');
-      return;
+    if (mode === 'distance-time') {
+      if (!distanceInKm || distanceInKm <= 0 || !timeInSeconds || timeInSeconds <= 0) {
+        return;
+      }
+      const paceUnit = runPaceUnit.value;
+      let paceDistance = distanceInKm;
+      if (paceUnit === 'min/mi') paceDistance = distanceInKm / 1.60934;
+      const paceInSeconds = timeInSeconds / paceDistance;
+      runPace.value = formatTime(paceInSeconds);
+    } else if (mode === 'pace-distance') {
+      if (!distanceInKm || distanceInKm <= 0) return;
+      const secPerKm = parsePaceToSecondsPerKm();
+      if (secPerKm == null || secPerKm <= 0) return;
+      const totalSeconds = secPerKm * distanceInKm;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+      runHours.value = String(h);
+      runMinutes.value = String(m);
+      runSeconds.value = String(s);
+    } else if (mode === 'pace-time') {
+      if (!timeInSeconds || timeInSeconds <= 0) return;
+      const secPerKm = parsePaceToSecondsPerKm();
+      if (secPerKm == null || secPerKm <= 0) return;
+      const km = timeInSeconds / secPerKm;
+      const dist = convertKmToDistance(km, runDistanceUnit.value);
+      runDistance.value = String(Number(dist.toFixed(2)));
     }
 
-    const distanceInKm = convertDistanceToKm(distance, runDistanceUnit.value);
-    
-    // Calculate pace (min/km or min/mi)
-    const paceUnit = runPaceUnit.value;
-    let paceDistance = distanceInKm;
-    if (paceUnit === 'min/mi') {
-      paceDistance = distanceInKm / 1.60934;
+    // Calculate speed when we have both distance and time
+    const haveDistance = !isNaN(distanceInKm) && distanceInKm > 0;
+    const haveTime = timeInSeconds > 0;
+    if (haveDistance && haveTime) {
+      const speedUnit = runSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = (distanceInKm / timeInSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((distanceInKm / 1.60934) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = (distanceInKm * 1000) / timeInSeconds;
+      }
+      runSpeed.value = speed.toFixed(2);
+    } else {
+      runSpeed.value = '';
     }
-    const paceInSeconds = timeInSeconds / paceDistance;
-    runPace.value = formatTime(paceInSeconds);
-
-    // Calculate speed
-    const speedUnit = runSpeedUnit.value;
-    let speed = 0;
-    if (speedUnit === 'km/h') {
-      speed = (distanceInKm / timeInSeconds) * 3600;
-    } else if (speedUnit === 'mph') {
-      speed = ((distanceInKm / 1.60934) / timeInSeconds) * 3600;
-    } else if (speedUnit === 'm/s') {
-      speed = (distanceInKm * 1000) / timeInSeconds;
-    }
-    runSpeed.value = speed.toFixed(2);
   }
 
   function resetRunning() {
@@ -278,15 +362,24 @@
 
   runCalculate?.addEventListener('click', calculateRunning);
   runReset?.addEventListener('click', resetRunning);
+  runMode?.addEventListener('change', () => { setReadonlyStates(); calculateRunning(); });
+  setReadonlyStates();
 
   // Recalculate on unit change
   runDistanceUnit?.addEventListener('change', () => {
     if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
   });
   runPaceUnit?.addEventListener('change', () => {
-    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
+    calculateRunning();
   });
   runSpeedUnit?.addEventListener('change', () => {
-    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
+    calculateRunning();
   });
+
+  // Recalculate on input changes
+  runDistance?.addEventListener('input', calculateRunning);
+  runHours?.addEventListener('input', calculateRunning);
+  runMinutes?.addEventListener('input', calculateRunning);
+  runSeconds?.addEventListener('input', calculateRunning);
+  runPace?.addEventListener('input', calculateRunning);
 </script>
