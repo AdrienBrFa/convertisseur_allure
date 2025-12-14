@@ -307,18 +307,43 @@
 
   function setReadonlyStates() {
     const mode = swimMode?.value || 'distance-time';
-    const editable = {
-      distance: mode !== 'pace-time' && mode !== 'speed-time',
-      time: mode !== 'pace-distance' && mode !== 'speed-distance',
-      pace: mode !== 'distance-time',
-      speed: mode === 'speed-time' || mode === 'speed-distance'
-    };
-    swimDistance.readOnly = !editable.distance;
-    swimHours.readOnly = !editable.time;
-    swimMinutes.readOnly = !editable.time;
-    swimSeconds.readOnly = !editable.time;
-    swimPace.readOnly = !editable.pace;
-    swimSpeed.readOnly = !editable.speed;
+    // First two fields are always inputs, last two are always calculated
+    if (mode === 'distance-time') {
+      swimDistance.readOnly = false;
+      swimHours.readOnly = false;
+      swimMinutes.readOnly = false;
+      swimSeconds.readOnly = false;
+      swimPace.readOnly = true;
+      swimSpeed.readOnly = true;
+    } else if (mode === 'pace-distance') {
+      swimPace.readOnly = false;
+      swimDistance.readOnly = false;
+      swimHours.readOnly = true;
+      swimMinutes.readOnly = true;
+      swimSeconds.readOnly = true;
+      swimSpeed.readOnly = true;
+    } else if (mode === 'pace-time') {
+      swimPace.readOnly = false;
+      swimHours.readOnly = false;
+      swimMinutes.readOnly = false;
+      swimSeconds.readOnly = false;
+      swimDistance.readOnly = true;
+      swimSpeed.readOnly = true;
+    } else if (mode === 'speed-time') {
+      swimSpeed.readOnly = false;
+      swimHours.readOnly = false;
+      swimMinutes.readOnly = false;
+      swimSeconds.readOnly = false;
+      swimDistance.readOnly = true;
+      swimPace.readOnly = true;
+    } else if (mode === 'speed-distance') {
+      swimSpeed.readOnly = false;
+      swimDistance.readOnly = false;
+      swimHours.readOnly = true;
+      swimMinutes.readOnly = true;
+      swimSeconds.readOnly = true;
+      swimPace.readOnly = true;
+    }
   }
 
   function calculateSwimming() {
@@ -327,20 +352,43 @@
     const timeInSeconds = getTimeInSeconds();
     const distanceInMeters = !isNaN(distance) ? convertDistanceToMeters(distance, swimDistanceUnit.value) : NaN;
 
+    // Each mode calculates exactly its two output fields (order 3 and 4)
     if (mode === 'distance-time') {
+      // Inputs: distance + time → Outputs: pace + speed
       if (!distanceInMeters || distanceInMeters <= 0 || !timeInSeconds || timeInSeconds <= 0) {
+        swimPace.value = '';
+        swimSpeed.value = '';
         return;
       }
-      // calculate pace per 100 units
+      // Calculate pace (order 3)
       const paceUnit = swimPaceUnit.value;
       let per100Distance = 100; // meters
-      if (paceUnit === 'min/100yd') per100Distance = 91.44; // meters in 100yd
+      if (paceUnit === 'min/100yd') per100Distance = 91.44;
       const paceInSeconds = timeInSeconds / (distanceInMeters / per100Distance);
       swimPace.value = formatTime(paceInSeconds);
+      
+      // Calculate speed (order 4)
+      const speedUnit = swimSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = ((distanceInMeters / 1000) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((distanceInMeters / 1609.34) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = distanceInMeters / timeInSeconds;
+      }
+      swimSpeed.value = speed.toFixed(2);
     } else if (mode === 'pace-distance') {
-      if (!distanceInMeters || distanceInMeters <= 0) return;
+      // Inputs: pace + distance → Outputs: time + speed
       const secPerMeter = parseSwimPaceToSecondsPerMeter();
-      if (secPerMeter == null || secPerMeter <= 0) return;
+      if (!distanceInMeters || distanceInMeters <= 0 || secPerMeter == null || secPerMeter <= 0) {
+        swimHours.value = '';
+        swimMinutes.value = '';
+        swimSeconds.value = '';
+        swimSpeed.value = '';
+        return;
+      }
+      // Calculate time (order 3)
       const totalSeconds = secPerMeter * distanceInMeters;
       const h = Math.floor(totalSeconds / 3600);
       const m = Math.floor((totalSeconds % 3600) / 60);
@@ -348,17 +396,51 @@
       swimHours.value = String(h);
       swimMinutes.value = String(m);
       swimSeconds.value = String(s);
+      
+      // Calculate speed (order 4)
+      const speedUnit = swimSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = ((distanceInMeters / 1000) / totalSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((distanceInMeters / 1609.34) / totalSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = distanceInMeters / totalSeconds;
+      }
+      swimSpeed.value = speed.toFixed(2);
     } else if (mode === 'pace-time') {
-      if (!timeInSeconds || timeInSeconds <= 0) return;
+      // Inputs: pace + time → Outputs: distance + speed
       const secPerMeter = parseSwimPaceToSecondsPerMeter();
-      if (secPerMeter == null || secPerMeter <= 0) return;
+      if (!timeInSeconds || timeInSeconds <= 0 || secPerMeter == null || secPerMeter <= 0) {
+        swimDistance.value = '';
+        swimSpeed.value = '';
+        return;
+      }
+      // Calculate distance (order 3)
       const meters = timeInSeconds / secPerMeter;
       const dist = convertMetersToDistance(meters, swimDistanceUnit.value);
       swimDistance.value = String(Number(dist.toFixed(2)));
+      
+      // Calculate speed (order 4)
+      const speedUnit = swimSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = ((meters / 1000) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((meters / 1609.34) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = meters / timeInSeconds;
+      }
+      swimSpeed.value = speed.toFixed(2);
     } else if (mode === 'speed-time') {
-      if (!timeInSeconds || timeInSeconds <= 0) return;
+      // Inputs: speed + time → Outputs: distance + pace
       const speedValue = parseFloat(swimSpeed.value);
-      if (isNaN(speedValue) || speedValue <= 0) return;
+      if (!timeInSeconds || timeInSeconds <= 0 || isNaN(speedValue) || speedValue <= 0) {
+        swimDistance.value = '';
+        swimPace.value = '';
+        return;
+      }
+      // Calculate distance (order 3)
       const speedUnit = swimSpeedUnit.value;
       let metersPerSecond = 0;
       if (speedUnit === 'km/h') {
@@ -371,10 +453,24 @@
       const meters = metersPerSecond * timeInSeconds;
       const dist = convertMetersToDistance(meters, swimDistanceUnit.value);
       swimDistance.value = String(Number(dist.toFixed(2)));
+      
+      // Calculate pace (order 4)
+      const paceUnit = swimPaceUnit.value;
+      let per100Distance = 100;
+      if (paceUnit === 'min/100yd') per100Distance = 91.44;
+      const paceInSeconds = timeInSeconds / (meters / per100Distance);
+      swimPace.value = formatTime(paceInSeconds);
     } else if (mode === 'speed-distance') {
-      if (!distanceInMeters || distanceInMeters <= 0) return;
+      // Inputs: speed + distance → Outputs: time + pace
       const speedValue = parseFloat(swimSpeed.value);
-      if (isNaN(speedValue) || speedValue <= 0) return;
+      if (!distanceInMeters || distanceInMeters <= 0 || isNaN(speedValue) || speedValue <= 0) {
+        swimHours.value = '';
+        swimMinutes.value = '';
+        swimSeconds.value = '';
+        swimPace.value = '';
+        return;
+      }
+      // Calculate time (order 3)
       const speedUnit = swimSpeedUnit.value;
       let metersPerSecond = 0;
       if (speedUnit === 'km/h') {
@@ -391,35 +487,13 @@
       swimHours.value = String(h);
       swimMinutes.value = String(m);
       swimSeconds.value = String(s);
-    }
-
-    // Calculate pace when we have distance and time
-    const haveDistance = !isNaN(distanceInMeters) && distanceInMeters > 0;
-    const haveTime = timeInSeconds > 0;
-    if (haveDistance && haveTime) {
+      
+      // Calculate pace (order 4)
       const paceUnit = swimPaceUnit.value;
-      let per100Distance = 100; // meters
-      if (paceUnit === 'min/100yd') per100Distance = 91.44; // meters in 100yd
-      const paceInSeconds = timeInSeconds / (distanceInMeters / per100Distance);
+      let per100Distance = 100;
+      if (paceUnit === 'min/100yd') per100Distance = 91.44;
+      const paceInSeconds = totalSeconds / (distanceInMeters / per100Distance);
       swimPace.value = formatTime(paceInSeconds);
-    } else {
-      swimPace.value = '';
-    }
-
-    // Calculate speed when we have both distance and time
-    if (haveDistance && haveTime) {
-      const speedUnit = swimSpeedUnit.value;
-      let speed = 0;
-      if (speedUnit === 'km/h') {
-        speed = ((distanceInMeters / 1000) / timeInSeconds) * 3600;
-      } else if (speedUnit === 'mph') {
-        speed = ((distanceInMeters / 1609.34) / timeInSeconds) * 3600;
-      } else if (speedUnit === 'm/s') {
-        speed = distanceInMeters / timeInSeconds;
-      }
-      swimSpeed.value = speed.toFixed(2);
-    } else {
-      swimSpeed.value = '';
     }
   }
 
@@ -453,4 +527,5 @@
   swimMinutes?.addEventListener('input', calculateSwimming);
   swimSeconds?.addEventListener('input', calculateSwimming);
   swimPace?.addEventListener('input', calculateSwimming);
+  swimSpeed?.addEventListener('input', calculateSwimming);
 </script>

@@ -302,18 +302,43 @@
 
   function setReadonlyStates() {
     const mode = runMode?.value || 'distance-time';
-    const editable = {
-      distance: mode !== 'pace-time' && mode !== 'speed-time',
-      time: mode !== 'pace-distance' && mode !== 'speed-distance',
-      pace: mode !== 'distance-time',
-      speed: mode === 'speed-time' || mode === 'speed-distance'
-    };
-    runDistance.readOnly = !editable.distance;
-    runHours.readOnly = !editable.time;
-    runMinutes.readOnly = !editable.time;
-    runSeconds.readOnly = !editable.time;
-    runPace.readOnly = !editable.pace;
-    runSpeed.readOnly = !editable.speed;
+    // First two fields are always inputs, last two are always calculated
+    if (mode === 'distance-time') {
+      runDistance.readOnly = false;
+      runHours.readOnly = false;
+      runMinutes.readOnly = false;
+      runSeconds.readOnly = false;
+      runPace.readOnly = true;
+      runSpeed.readOnly = true;
+    } else if (mode === 'pace-distance') {
+      runPace.readOnly = false;
+      runDistance.readOnly = false;
+      runHours.readOnly = true;
+      runMinutes.readOnly = true;
+      runSeconds.readOnly = true;
+      runSpeed.readOnly = true;
+    } else if (mode === 'pace-time') {
+      runPace.readOnly = false;
+      runHours.readOnly = false;
+      runMinutes.readOnly = false;
+      runSeconds.readOnly = false;
+      runDistance.readOnly = true;
+      runSpeed.readOnly = true;
+    } else if (mode === 'speed-time') {
+      runSpeed.readOnly = false;
+      runHours.readOnly = false;
+      runMinutes.readOnly = false;
+      runSeconds.readOnly = false;
+      runDistance.readOnly = true;
+      runPace.readOnly = true;
+    } else if (mode === 'speed-distance') {
+      runSpeed.readOnly = false;
+      runDistance.readOnly = false;
+      runHours.readOnly = true;
+      runMinutes.readOnly = true;
+      runSeconds.readOnly = true;
+      runPace.readOnly = true;
+    }
   }
 
   function calculateRunning() {
@@ -323,85 +348,19 @@
     const distanceInKm = !isNaN(distance) ? convertDistanceToKm(distance, runDistanceUnit.value) : NaN;
 
     if (mode === 'distance-time') {
+      // Inputs: distance, time → Calculate: pace, speed
       if (!distanceInKm || distanceInKm <= 0 || !timeInSeconds || timeInSeconds <= 0) {
+        runPace.value = '';
+        runSpeed.value = '';
         return;
       }
+      // Calculate pace
       const paceUnit = runPaceUnit.value;
       let paceDistance = distanceInKm;
       if (paceUnit === 'min/mi') paceDistance = distanceInKm / 1.60934;
       const paceInSeconds = timeInSeconds / paceDistance;
       runPace.value = formatTime(paceInSeconds);
-    } else if (mode === 'pace-distance') {
-      if (!distanceInKm || distanceInKm <= 0) return;
-      const secPerKm = parsePaceToSecondsPerKm();
-      if (secPerKm == null || secPerKm <= 0) return;
-      const totalSeconds = secPerKm * distanceInKm;
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = Math.floor(totalSeconds % 60);
-      runHours.value = String(h);
-      runMinutes.value = String(m);
-      runSeconds.value = String(s);
-    } else if (mode === 'pace-time') {
-      if (!timeInSeconds || timeInSeconds <= 0) return;
-      const secPerKm = parsePaceToSecondsPerKm();
-      if (secPerKm == null || secPerKm <= 0) return;
-      const km = timeInSeconds / secPerKm;
-      const dist = convertKmToDistance(km, runDistanceUnit.value);
-      runDistance.value = String(Number(dist.toFixed(2)));
-    } else if (mode === 'speed-time') {
-      if (!timeInSeconds || timeInSeconds <= 0) return;
-      const speedValue = parseFloat(runSpeed.value);
-      if (isNaN(speedValue) || speedValue <= 0) return;
-      const speedUnit = runSpeedUnit.value;
-      let kmPerHour = 0;
-      if (speedUnit === 'km/h') {
-        kmPerHour = speedValue;
-      } else if (speedUnit === 'mph') {
-        kmPerHour = speedValue * 1.60934;
-      } else if (speedUnit === 'm/s') {
-        kmPerHour = speedValue * 3.6;
-      }
-      const km = (kmPerHour * timeInSeconds) / 3600;
-      const dist = convertKmToDistance(km, runDistanceUnit.value);
-      runDistance.value = String(Number(dist.toFixed(2)));
-    } else if (mode === 'speed-distance') {
-      if (!distanceInKm || distanceInKm <= 0) return;
-      const speedValue = parseFloat(runSpeed.value);
-      if (isNaN(speedValue) || speedValue <= 0) return;
-      const speedUnit = runSpeedUnit.value;
-      let kmPerHour = 0;
-      if (speedUnit === 'km/h') {
-        kmPerHour = speedValue;
-      } else if (speedUnit === 'mph') {
-        kmPerHour = speedValue * 1.60934;
-      } else if (speedUnit === 'm/s') {
-        kmPerHour = speedValue * 3.6;
-      }
-      const totalSeconds = (distanceInKm / kmPerHour) * 3600;
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = Math.floor(totalSeconds % 60);
-      runHours.value = String(h);
-      runMinutes.value = String(m);
-      runSeconds.value = String(s);
-    }
-
-    // Calculate pace when we have distance and time
-    const haveDistance = !isNaN(distanceInKm) && distanceInKm > 0;
-    const haveTime = timeInSeconds > 0;
-    if (haveDistance && haveTime) {
-      const paceUnit = runPaceUnit.value;
-      let paceDistance = distanceInKm;
-      if (paceUnit === 'min/mi') paceDistance = distanceInKm / 1.60934;
-      const paceInSeconds = timeInSeconds / paceDistance;
-      runPace.value = formatTime(paceInSeconds);
-    } else {
-      runPace.value = '';
-    }
-
-    // Calculate speed when we have both distance and time
-    if (haveDistance && haveTime) {
+      // Calculate speed
       const speedUnit = runSpeedUnit.value;
       let speed = 0;
       if (speedUnit === 'km/h') {
@@ -412,8 +371,142 @@
         speed = (distanceInKm * 1000) / timeInSeconds;
       }
       runSpeed.value = speed.toFixed(2);
-    } else {
-      runSpeed.value = '';
+    } else if (mode === 'pace-distance') {
+      // Inputs: pace, distance → Calculate: time, speed
+      if (!distanceInKm || distanceInKm <= 0) {
+        runHours.value = '';
+        runMinutes.value = '';
+        runSeconds.value = '';
+        runSpeed.value = '';
+        return;
+      }
+      const secPerKm = parsePaceToSecondsPerKm();
+      if (secPerKm == null || secPerKm <= 0) {
+        runHours.value = '';
+        runMinutes.value = '';
+        runSeconds.value = '';
+        runSpeed.value = '';
+        return;
+      }
+      // Calculate time
+      const totalSeconds = secPerKm * distanceInKm;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+      runHours.value = String(h);
+      runMinutes.value = String(m);
+      runSeconds.value = String(s);
+      // Calculate speed
+      const speedUnit = runSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = (distanceInKm / totalSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((distanceInKm / 1.60934) / totalSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = (distanceInKm * 1000) / totalSeconds;
+      }
+      runSpeed.value = speed.toFixed(2);
+    } else if (mode === 'pace-time') {
+      // Inputs: pace, time → Calculate: distance, speed
+      if (!timeInSeconds || timeInSeconds <= 0) {
+        runDistance.value = '';
+        runSpeed.value = '';
+        return;
+      }
+      const secPerKm = parsePaceToSecondsPerKm();
+      if (secPerKm == null || secPerKm <= 0) {
+        runDistance.value = '';
+        runSpeed.value = '';
+        return;
+      }
+      // Calculate distance
+      const km = timeInSeconds / secPerKm;
+      const dist = convertKmToDistance(km, runDistanceUnit.value);
+      runDistance.value = String(Number(dist.toFixed(2)));
+      // Calculate speed
+      const speedUnit = runSpeedUnit.value;
+      let speed = 0;
+      if (speedUnit === 'km/h') {
+        speed = (km / timeInSeconds) * 3600;
+      } else if (speedUnit === 'mph') {
+        speed = ((km / 1.60934) / timeInSeconds) * 3600;
+      } else if (speedUnit === 'm/s') {
+        speed = (km * 1000) / timeInSeconds;
+      }
+      runSpeed.value = speed.toFixed(2);
+    } else if (mode === 'speed-time') {
+      // Inputs: speed, time → Calculate: distance, pace
+      if (!timeInSeconds || timeInSeconds <= 0) {
+        runDistance.value = '';
+        runPace.value = '';
+        return;
+      }
+      const speedValue = parseFloat(runSpeed.value);
+      if (isNaN(speedValue) || speedValue <= 0) {
+        runDistance.value = '';
+        runPace.value = '';
+        return;
+      }
+      const speedUnit = runSpeedUnit.value;
+      let kmPerHour = 0;
+      if (speedUnit === 'km/h') {
+        kmPerHour = speedValue;
+      } else if (speedUnit === 'mph') {
+        kmPerHour = speedValue * 1.60934;
+      } else if (speedUnit === 'm/s') {
+        kmPerHour = speedValue * 3.6;
+      }
+      // Calculate distance
+      const km = (kmPerHour * timeInSeconds) / 3600;
+      const dist = convertKmToDistance(km, runDistanceUnit.value);
+      runDistance.value = String(Number(dist.toFixed(2)));
+      // Calculate pace
+      const paceUnit = runPaceUnit.value;
+      let paceDistance = km;
+      if (paceUnit === 'min/mi') paceDistance = km / 1.60934;
+      const paceInSeconds = timeInSeconds / paceDistance;
+      runPace.value = formatTime(paceInSeconds);
+    } else if (mode === 'speed-distance') {
+      // Inputs: speed, distance → Calculate: time, pace
+      if (!distanceInKm || distanceInKm <= 0) {
+        runHours.value = '';
+        runMinutes.value = '';
+        runSeconds.value = '';
+        runPace.value = '';
+        return;
+      }
+      const speedValue = parseFloat(runSpeed.value);
+      if (isNaN(speedValue) || speedValue <= 0) {
+        runHours.value = '';
+        runMinutes.value = '';
+        runSeconds.value = '';
+        runPace.value = '';
+        return;
+      }
+      const speedUnit = runSpeedUnit.value;
+      let kmPerHour = 0;
+      if (speedUnit === 'km/h') {
+        kmPerHour = speedValue;
+      } else if (speedUnit === 'mph') {
+        kmPerHour = speedValue * 1.60934;
+      } else if (speedUnit === 'm/s') {
+        kmPerHour = speedValue * 3.6;
+      }
+      // Calculate time
+      const totalSeconds = (distanceInKm / kmPerHour) * 3600;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+      runHours.value = String(h);
+      runMinutes.value = String(m);
+      runSeconds.value = String(s);
+      // Calculate pace
+      const paceUnit = runPaceUnit.value;
+      let paceDistance = distanceInKm;
+      if (paceUnit === 'min/mi') paceDistance = distanceInKm / 1.60934;
+      const paceInSeconds = totalSeconds / paceDistance;
+      runPace.value = formatTime(paceInSeconds);
     }
   }
 
@@ -447,4 +540,5 @@
   runMinutes?.addEventListener('input', calculateRunning);
   runSeconds?.addEventListener('input', calculateRunning);
   runPace?.addEventListener('input', calculateRunning);
+  runSpeed?.addEventListener('input', calculateRunning);
 </script>
