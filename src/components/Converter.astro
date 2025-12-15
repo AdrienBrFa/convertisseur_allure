@@ -1,5 +1,6 @@
 ---
 import type { ConverterConfig } from '../utils/converterConfig';
+import { getShortcuts } from '../utils/shortcuts';
 
 interface Props {
   config: ConverterConfig;
@@ -7,6 +8,7 @@ interface Props {
 
 const { config } = Astro.props;
 const uniqueId = config.sport;
+const shortcuts = getShortcuts(config.sport);
 ---
 
 <div class="converter-section">
@@ -35,23 +37,30 @@ const uniqueId = config.sport;
           ))}
         </select>
       </div>
+      <div class="shortcuts">
+        {shortcuts.distance.map((shortcut) => (
+          <button type="button" class="shortcut-btn" data-field="distance" data-value={shortcut.value}>
+            {shortcut.label}
+          </button>
+        ))}
+      </div>
     </div>
 
     <div class="input-group" data-field="time">
       <label for={`${uniqueId}-time`}>Time</label>
       <div class="time-inputs">
-        <input type="number" id={`${uniqueId}-hours`} min="0" max="23" placeholder="0" />
+        <input type="number" id={`${uniqueId}-hours`} min="0" max="23" placeholder="h" />
         <span>:</span>
-        <input type="number" id={`${uniqueId}-minutes`} min="0" max="59" placeholder="0" />
+        <input type="number" id={`${uniqueId}-minutes`} min="0" max="59" placeholder="m" />
         <span>:</span>
-        <input type="number" id={`${uniqueId}-seconds`} min="0" max="59" placeholder="0" />
+        <input type="number" id={`${uniqueId}-seconds`} min="0" max="59" placeholder="s" />
       </div>
-      <div class="time-labels">
-        <span>h</span>
-        <span></span>
-        <span>m</span>
-        <span></span>
-        <span>s</span>
+      <div class="shortcuts">
+        {shortcuts.time.map((shortcut) => (
+          <button type="button" class="shortcut-btn" data-field="time" data-value={shortcut.value}>
+            {shortcut.label}
+          </button>
+        ))}
       </div>
     </div>
 
@@ -67,6 +76,13 @@ const uniqueId = config.sport;
           ))}
         </select>
       </div>
+      <div class="shortcuts">
+        {shortcuts.pace.map((shortcut) => (
+          <button type="button" class="shortcut-btn" data-field="pace" data-value={shortcut.value}>
+            {shortcut.label}
+          </button>
+        ))}
+      </div>
     </div>
 
     <div class="input-group" data-field="speed">
@@ -80,6 +96,13 @@ const uniqueId = config.sport;
             </option>
           ))}
         </select>
+      </div>
+      <div class="shortcuts">
+        {shortcuts.speed.map((shortcut) => (
+          <button type="button" class="shortcut-btn" data-field="speed" data-value={shortcut.value}>
+            {shortcut.label}
+          </button>
+        ))}
       </div>
     </div>
   </div>
@@ -163,19 +186,35 @@ const uniqueId = config.sport;
     color: var(--text-color);
   }
 
-  .time-labels {
+  /* Shortcuts */
+  .shortcuts {
     display: flex;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
   }
 
-  .time-labels span:nth-child(1),
-  .time-labels span:nth-child(3),
-  .time-labels span:nth-child(5) {
-    flex: 1;
-    text-align: center;
+  .shortcut-btn {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.8125rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background: white;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .shortcut-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .shortcut-btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
   }
 
   /* Reordering by mode */
@@ -459,4 +498,38 @@ const uniqueId = config.sport;
   secondsInput?.addEventListener('input', calculate);
   paceInput?.addEventListener('input', calculate);
   speedInput?.addEventListener('input', calculate);
+
+  // Shortcut buttons handling
+  const shortcutButtons = document.querySelectorAll(`#${uniqueId}-grid .shortcut-btn`);
+  shortcutButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const field = button.getAttribute('data-field');
+      const value = button.getAttribute('data-value');
+      
+      if (!field || !value) return;
+      
+      if (field === 'distance') {
+        // Set distance value
+        distanceInput.value = value;
+        calculate();
+      } else if (field === 'time') {
+        // Parse time format HH:MM:SS
+        const timeParts = value.split(':');
+        if (timeParts.length === 3) {
+          hoursInput.value = timeParts[0];
+          minutesInput.value = timeParts[1];
+          secondsInput.value = timeParts[2];
+          calculate();
+        }
+      } else if (field === 'pace') {
+        // Set pace value (MM:SS format)
+        paceInput.value = value;
+        calculate();
+      } else if (field === 'speed') {
+        // Set speed value
+        speedInput.value = value;
+        calculate();
+      }
+    });
+  });
 </script>
