@@ -233,6 +233,24 @@ const shortcuts = getShortcuts(config.sport);
     gap: 0.5rem;
   }
 
+  .input-group.input {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .input-group.output {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .input-group.first-output {
+    margin-top: 0.75rem;
+  }
+
   .converter-grid.mode-distance-time [data-field="distance"] { order: 1; }
   .converter-grid.mode-distance-time [data-field="time"] { order: 2; }
   .converter-grid.mode-distance-time [data-field="pace"] { order: 3; }
@@ -325,6 +343,16 @@ const shortcuts = getShortcuts(config.sport);
     // CRITICAL: All calculated fields are ALWAYS readonly, never editable
     // This prevents the bug where users could edit pace/speed without triggering calculations
     
+    // Reset classes on groups
+    const distanceGroup = gridElement?.querySelector('[data-field="distance"]');
+    const timeGroup = gridElement?.querySelector('[data-field="time"]');
+    const paceGroup = gridElement?.querySelector('[data-field="pace"]');
+    const speedGroup = gridElement?.querySelector('[data-field="speed"]');
+
+    [distanceGroup, timeGroup, paceGroup, speedGroup].forEach((el) => {
+      el?.classList.remove('input', 'output', 'first-output');
+    });
+
     if (mode === 'distance-time') {
       // Inputs: distance, time
       distanceInput.readOnly = false;
@@ -334,6 +362,11 @@ const shortcuts = getShortcuts(config.sport);
       // Calculated: pace, speed (ALWAYS readonly)
       paceInput.readOnly = true;
       speedInput.readOnly = true;
+
+      distanceGroup?.classList.add('input');
+      timeGroup?.classList.add('input');
+      paceGroup?.classList.add('output', 'first-output');
+      speedGroup?.classList.add('output');
     } else if (mode === 'pace-distance') {
       // Inputs: pace, distance
       paceInput.readOnly = false;
@@ -343,6 +376,11 @@ const shortcuts = getShortcuts(config.sport);
       minutesInput.readOnly = true;
       secondsInput.readOnly = true;
       speedInput.readOnly = true;
+
+      paceGroup?.classList.add('input');
+      distanceGroup?.classList.add('input');
+      timeGroup?.classList.add('output', 'first-output');
+      speedGroup?.classList.add('output');
     } else if (mode === 'pace-time') {
       // Inputs: pace, time
       paceInput.readOnly = false;
@@ -352,6 +390,11 @@ const shortcuts = getShortcuts(config.sport);
       // Calculated: distance, speed (ALWAYS readonly)
       distanceInput.readOnly = true;
       speedInput.readOnly = true;
+
+      paceGroup?.classList.add('input');
+      timeGroup?.classList.add('input');
+      distanceGroup?.classList.add('output', 'first-output');
+      speedGroup?.classList.add('output');
     } else if (mode === 'speed-time') {
       // Inputs: speed, time
       speedInput.readOnly = false;
@@ -361,6 +404,11 @@ const shortcuts = getShortcuts(config.sport);
       // Calculated: distance, pace (ALWAYS readonly)
       distanceInput.readOnly = true;
       paceInput.readOnly = true;
+
+      speedGroup?.classList.add('input');
+      timeGroup?.classList.add('input');
+      distanceGroup?.classList.add('output', 'first-output');
+      paceGroup?.classList.add('output');
     } else if (mode === 'speed-distance') {
       // Inputs: speed, distance
       speedInput.readOnly = false;
@@ -370,6 +418,11 @@ const shortcuts = getShortcuts(config.sport);
       minutesInput.readOnly = true;
       secondsInput.readOnly = true;
       paceInput.readOnly = true;
+
+      speedGroup?.classList.add('input');
+      distanceGroup?.classList.add('input');
+      timeGroup?.classList.add('output', 'first-output');
+      paceGroup?.classList.add('output');
     }
   }
 

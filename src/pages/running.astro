@@ -14,8 +14,26 @@ import { RUNNING_CONFIG } from '../utils/converterConfig';
     </header>
 
     <div class="container">
-      <a href={import.meta.env.BASE_URL} class="back-link">← Back to menu</a>
+      <div style="text-align: center;">
+        <a href={import.meta.env.BASE_URL} class="back-link">← Back to menu</a>
+      </div>
       <Converter config={RUNNING_CONFIG} />
+
+      <section class="content-section">
+        <h2>How the running converter calculates results</h2>
+        <p>
+          The converter uses consistent unit conversions and simple physics formulas to compute pace, speed, time, and distance.
+        </p>
+        <ul>
+          <li><strong>Pace</strong>: pace = time / distance, displayed as minutes per unit (min/km or min/mi).</li>
+          <li><strong>Speed</strong>: speed = distance / time, displayed as km/h, mph, or m/s.</li>
+          <li><strong>Time from pace & distance</strong>: totalSeconds = paceSecondsPerUnit × distanceInUnits.</li>
+          <li><strong>Distance from pace & time</strong>: distanceInUnits = totalSeconds / paceSecondsPerUnit.</li>
+        </ul>
+        <p>
+          Unit conversions: 1 mile = 1.60934 km, 1 km = 1000 m. Pace is formatted as mm:ss.
+        </p>
+      </section>
 
       <!-- Future content section: explanations, tables, etc. -->
       <!--
@@ -70,17 +88,18 @@ import { RUNNING_CONFIG } from '../utils/converterConfig';
 
   .back-link {
     display: inline-flex;
+    justify-content: center;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
+    padding: 0.5rem 0.75rem;
     background: white;
     color: var(--primary-color);
     text-decoration: none;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 500;
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     box-shadow: var(--shadow);
-    margin-bottom: 2rem;
+    margin: 0 auto 2rem;
     transition: all 0.2s;
   }
 
@@ -95,6 +114,28 @@ import { RUNNING_CONFIG } from '../utils/converterConfig';
     color: #6b7280;
     font-size: 0.875rem;
     margin-top: auto;
+  }
+
+  .content-section {
+    max-width: 900px;
+    margin: 1rem auto 2rem;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    color: var(--text-color);
+  }
+
+  .content-section h2 {
+    margin-bottom: 0.75rem;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+  }
+
+  .content-section ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
   }
 
   @media (max-width: 640px) {
