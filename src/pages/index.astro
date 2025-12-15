@@ -1,21 +1,32 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import RunningConverter from '../components/RunningConverter.astro';
-import SwimmingConverter from '../components/SwimmingConverter.astro';
 ---
 
-<Layout title="Running & Swimming Pace Converter" description="Convert between pace, speed, time, and distance for running and swimming. Fast, mobile-first pace calculator for athletes.">
+<Layout title="Pace Converter - Running & Swimming" description="Convert between pace, speed, time, and distance for running and swimming. Fast, mobile-first pace calculator for athletes.">
   <main>
     <header class="header">
       <div class="container">
-        <h1>🏃🏊 Running & Swimming Pace Converter</h1>
+        <h1>🏃🏊 Pace Converter</h1>
         <p class="subtitle">Convert between pace, speed, time, and distance</p>
       </div>
     </header>
 
     <div class="container">
-      <RunningConverter />
-      <SwimmingConverter />
+      <div class="sport-selection">
+        <h2>Choose your sport</h2>
+        <div class="sport-cards">
+          <a href="running" class="sport-card">
+            <div class="sport-emoji">🏃</div>
+            <h3>Running</h3>
+            <p>Convert pace, speed, and distance for running</p>
+          </a>
+          <a href="swimming" class="sport-card">
+            <div class="sport-emoji">🏊</div>
+            <h3>Swimming</h3>
+            <p>Convert pace, speed, and distance for swimming</p>
+          </a>
+        </div>
+      </div>
 
       <footer class="footer">
         <p>Made for athletes who want to quickly convert their training metrics</p>
@@ -55,6 +66,66 @@ import SwimmingConverter from '../components/SwimmingConverter.astro';
     width: 100%;
   }
 
+  .sport-selection {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .sport-selection h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin-bottom: 2rem;
+    color: var(--text-color);
+  }
+
+  .sport-cards {
+    display: grid;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .sport-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .sport-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .sport-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px -5px rgb(0 0 0 / 0.2);
+  }
+
+  .sport-emoji {
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  .sport-card h3 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--primary-color);
+  }
+
+  .sport-card p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 1rem;
+  }
+
   .footer {
     text-align: center;
     padding: 2rem 1rem;
@@ -70,6 +141,10 @@ import SwimmingConverter from '../components/SwimmingConverter.astro';
 
     .container {
       padding: 1.5rem 1rem;
+    }
+
+    .sport-card {
+      padding: 2rem 1.5rem;
     }
   }
 </style>
