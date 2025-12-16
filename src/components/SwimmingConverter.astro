@@ -43,10 +43,10 @@
     <div class="input-group" data-field="pace">
       <label for="swim-pace">Pace</label>
       <div class="input-with-unit">
-        <input type="text" id="swim-pace" placeholder="0:00" readonly />
+        <input type="text" id="swim-pace" placeholder="0:00" />
         <select id="swim-pace-unit">
-          <option value="min/100m">m/100m</option>
-          <option value="min/100yd">100yd</option>
+          <option value="min/100m">min/100m</option>
+          <option value="min/100yd">min/100yd</option>
         </select>
       </div>
     </div>
@@ -54,7 +54,7 @@
     <div class="input-group" data-field="speed">
       <label for="swim-speed">Speed</label>
       <div class="input-with-unit">
-        <input type="text" id="swim-speed" placeholder="0.00" readonly />
+        <input type="text" id="swim-speed" placeholder="0.00" />
         <select id="swim-speed-unit">
           <option value="km/h">km/h</option>
           <option value="mph">mph</option>
@@ -145,15 +145,13 @@
 
   /* Reordering by mode */
   .converter-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-bottom: 1.5rem;
   }
 
   .input-group {
-    flex: 1 1 calc(50% - 0.75rem);
-    min-width: 280px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -195,8 +193,8 @@
       align-items: flex-start;
     }
 
-    .input-group {
-      flex: 0 0 100%;
+    .converter-grid {
+      grid-template-columns: 1fr;
     }
 
     .input-with-unit input {
@@ -488,22 +486,73 @@
   updateModeClass();
   setReadonlyStates();
 
-  // Recalculate on unit change
-  swimDistanceUnit?.addEventListener('change', () => {
-    calculateSwimming();
-  });
-  swimPaceUnit?.addEventListener('change', () => {
-    calculateSwimming();
-  });
-  swimSpeedUnit?.addEventListener('change', () => {
-    calculateSwimming();
+  // Shortcut buttons event listeners with event delegation
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLButtonElement;
+    
+    if (target.dataset.distance !== undefined) {
+      const m = parseFloat(target.dataset.distance || '0');
+      const metersConverted = convertDistanceToMeters(m, 'km');
+      const converted = convertMetersToDistance(metersConverted, swimDistanceUnit.value);
+      swimDistance.value = String(Number(converted.toFixed(2)));
+      swimDistance.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.time !== undefined) {
+      const seconds = parseInt(target.dataset.time || '0');
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      swimHours.value = String(h);
+      swimMinutes.value = String(m);
+      swimSeconds.value = String(s);
+      swimHours.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.pace !== undefined) {
+      swimPace.value = target.dataset.pace || '0:00';
+      swimPace.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.speed !== undefined) {
+      const kmh = parseFloat(target.dataset.speed || '0');
+      let speedValue = kmh;
+      if (swimSpeedUnit.value === 'mph') {
+        speedValue = kmh / 1.60934;
+      } else if (swimSpeedUnit.value === 'm/s') {
+        speedValue = kmh / 3.6;
+      }
+      swimSpeed.value = String(Number(speedValue.toFixed(2)));
+      swimSpeed.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   });
 
-  // Recalculate on input changes
-  swimDistance?.addEventListener('input', calculateSwimming);
-  swimHours?.addEventListener('input', calculateSwimming);
-  swimMinutes?.addEventListener('input', calculateSwimming);
-  swimSeconds?.addEventListener('input', calculateSwimming);
-  swimPace?.addEventListener('input', calculateSwimming);
-  swimSpeed?.addEventListener('input', calculateSwimming);
+  // Initialize event listeners
+  function initializeEventListeners() {
+    // Recalculate on unit change
+    swimDistanceUnit?.addEventListener('change', () => {
+      calculateSwimming();
+    });
+    swimPaceUnit?.addEventListener('change', () => {
+      calculateSwimming();
+    });
+    swimSpeedUnit?.addEventListener('change', () => {
+      calculateSwimming();
+    });
+
+    // Recalculate on input changes
+    swimDistance?.addEventListener('input', calculateSwimming);
+    swimHours?.addEventListener('input', calculateSwimming);
+    swimMinutes?.addEventListener('input', calculateSwimming);
+    swimSeconds?.addEventListener('input', calculateSwimming);
+    swimPace?.addEventListener('input', calculateSwimming);
+    swimSpeed?.addEventListener('input', calculateSwimming);
+  }
+
+  // Make sure DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEventListeners);
+  } else {
+    initializeEventListeners();
+  }
 </script>

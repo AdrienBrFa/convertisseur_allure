@@ -58,7 +58,7 @@
     <div class="input-group" data-field="pace">
       <label for="run-pace">Pace</label>
       <div class="input-with-unit">
-        <input type="text" id="run-pace" placeholder="0:00" readonly />
+        <input type="text" id="run-pace" placeholder="0:00" />
         <select id="run-pace-unit">
           <option value="min/km">min/km</option>
           <option value="min/mi">min/mi</option>
@@ -80,7 +80,7 @@
     <div class="input-group" data-field="speed">
       <label for="run-speed">Speed</label>
       <div class="input-with-unit">
-        <input type="text" id="run-speed" placeholder="0.00" readonly />
+        <input type="text" id="run-speed" placeholder="0.00" />
         <select id="run-speed-unit">
           <option value="km/h">km/h</option>
           <option value="mph">mph</option>
@@ -177,15 +177,13 @@
 
   /* Reordering by mode */
   .converter-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-bottom: 1.5rem;
   }
 
   .input-group {
-    flex: 1 1 calc(50% - 0.75rem);
-    min-width: 280px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -279,8 +277,8 @@
       align-items: flex-start;
     }
 
-    .input-group {
-      flex: 0 0 100%;
+    .converter-grid {
+      grid-template-columns: 1fr;
     }
 
     .input-with-unit input {
@@ -308,6 +306,11 @@
   const runSpeedUnit = document.getElementById('run-speed-unit') as HTMLSelectElement;
   const runMode = document.getElementById('run-mode') as HTMLSelectElement;
   const runGrid = document.getElementById('run-grid') as HTMLElement;
+
+  // Verify all elements are loaded
+  if (!runDistance || !runHours || !runPace || !runSpeed) {
+    console.error('Running converter: Missing DOM elements');
+  }
 
   function updateModeClass() {
     const mode = runMode?.value || 'distance-time';
@@ -582,69 +585,76 @@
     runSpeed.value = '';
   }
 
-  // Shortcut buttons event listeners
-  document.querySelectorAll('[data-distance]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const km = parseFloat((e.target as HTMLButtonElement).dataset.distance || '0');
-      runDistance.value = String(convertKmToDistance(km, runDistanceUnit.value));
-      calculateRunning();
-    });
-  });
-
-  document.querySelectorAll('[data-time]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const seconds = parseInt((e.target as HTMLButtonElement).dataset.time || '0');
+  // Shortcut buttons event listeners with event delegation
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLButtonElement;
+    
+    if (target.dataset.distance !== undefined) {
+      const km = parseFloat(target.dataset.distance || '0');
+      const converted = convertKmToDistance(km, runDistanceUnit.value);
+      runDistance.value = String(Number(converted.toFixed(2)));
+      runDistance.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.time !== undefined) {
+      const seconds = parseInt(target.dataset.time || '0');
       const h = Math.floor(seconds / 3600);
       const m = Math.floor((seconds % 3600) / 60);
       const s = seconds % 60;
       runHours.value = String(h);
       runMinutes.value = String(m);
       runSeconds.value = String(s);
-      calculateRunning();
-    });
-  });
-
-  document.querySelectorAll('[data-pace]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      runPace.value = (e.target as HTMLButtonElement).dataset.pace || '0:00';
-      calculateRunning();
-    });
-  });
-
-  document.querySelectorAll('[data-speed]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const kmh = parseFloat((e.target as HTMLButtonElement).dataset.speed || '0');
+      runHours.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.pace !== undefined) {
+      runPace.value = target.dataset.pace || '0:00';
+      runPace.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (target.dataset.speed !== undefined) {
+      const kmh = parseFloat(target.dataset.speed || '0');
       let speedValue = kmh;
       if (runSpeedUnit.value === 'mph') {
         speedValue = kmh / 1.60934;
       } else if (runSpeedUnit.value === 'm/s') {
         speedValue = kmh / 3.6;
       }
-      runSpeed.value = speedValue.toFixed(2);
+      runSpeed.value = String(Number(speedValue.toFixed(2)));
+      runSpeed.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  // Initialize event listeners
+  function initializeEventListeners() {
+    runMode?.addEventListener('change', () => { setReadonlyStates(); updateModeClass(); calculateRunning(); });
+    updateModeClass();
+    setReadonlyStates();
+
+    // Recalculate on unit change
+    runDistanceUnit?.addEventListener('change', () => {
+      if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
+    });
+    runPaceUnit?.addEventListener('change', () => {
       calculateRunning();
     });
-  });
+    runSpeedUnit?.addEventListener('change', () => {
+      calculateRunning();
+    });
 
-  runMode?.addEventListener('change', () => { setReadonlyStates(); updateModeClass(); calculateRunning(); });
-  updateModeClass();
-  setReadonlyStates();
+    // Recalculate on input changes
+    runDistance?.addEventListener('input', calculateRunning);
+    runHours?.addEventListener('input', calculateRunning);
+    runMinutes?.addEventListener('input', calculateRunning);
+    runSeconds?.addEventListener('input', calculateRunning);
+    runPace?.addEventListener('input', calculateRunning);
+    runSpeed?.addEventListener('input', calculateRunning);
+  }
 
-  // Recalculate on unit change
-  runDistanceUnit?.addEventListener('change', () => {
-    if (runDistance.value && getTimeInSeconds() > 0) calculateRunning();
-  });
-  runPaceUnit?.addEventListener('change', () => {
-    calculateRunning();
-  });
-  runSpeedUnit?.addEventListener('change', () => {
-    calculateRunning();
-  });
-
-  // Recalculate on input changes
-  runDistance?.addEventListener('input', calculateRunning);
-  runHours?.addEventListener('input', calculateRunning);
-  runMinutes?.addEventListener('input', calculateRunning);
-  runSeconds?.addEventListener('input', calculateRunning);
-  runPace?.addEventListener('input', calculateRunning);
-  runSpeed?.addEventListener('input', calculateRunning);
+  // Make sure DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEventListeners);
+  } else {
+    initializeEventListeners();
+  }
 </script>

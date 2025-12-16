@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Converter from '../components/Converter.astro';
-import { RUNNING_CONFIG } from '../utils/converterConfig';
+import RunningConverter from '../components/RunningConverter.astro';
 ---
 
 <Layout title="Running Pace Converter" description="Convert between pace, speed, time, and distance for running. Fast, mobile-first pace calculator for runners.">
@@ -17,7 +16,7 @@ import { RUNNING_CONFIG } from '../utils/converterConfig';
       <div style="text-align: center;">
         <a href={import.meta.env.BASE_URL} class="back-link">← Back to menu</a>
       </div>
-      <Converter config={RUNNING_CONFIG} />
+      <RunningConverter />
 
       <section class="content-section">
         <h2>How the running converter calculates results</h2>

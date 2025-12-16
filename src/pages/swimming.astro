@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Converter from '../components/Converter.astro';
-import { SWIMMING_CONFIG } from '../utils/converterConfig';
+import SwimmingConverter from '../components/SwimmingConverter.astro';
 ---
 
 <Layout title="Swimming Pace Converter" description="Convert between pace, speed, time, and distance for swimming. Fast, mobile-first pace calculator for swimmers.">
@@ -17,7 +16,7 @@ import { SWIMMING_CONFIG } from '../utils/converterConfig';
       <div style="text-align: center;">
         <a href={import.meta.env.BASE_URL} class="back-link">← Back to menu</a>
       </div>
-      <Converter config={SWIMMING_CONFIG} />
+      <SwimmingConverter />
 
       <section class="content-section">
         <h2>How the swimming converter calculates results</h2>
