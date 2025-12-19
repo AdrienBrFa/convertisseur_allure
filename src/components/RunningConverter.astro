@@ -8,7 +8,7 @@
     <label for="run-mode">Mode</label>
     <select id="run-mode">
       <option value="distance-time">Distance + Time → Pace</option>
-      <option value="pace-distance">Pace + Distance → Time</option>
+      <option value="distance-pace">Distance + Pace → Time</option>
       <option value="pace-time">Pace + Time → Distance</option>
       <option value="speed-time">Speed + Time → Distance</option>
       <option value="speed-distance">Speed + Distance → Time</option>
@@ -194,10 +194,10 @@
   .converter-grid.mode-distance-time [data-field="pace"] { order: 3; }
   .converter-grid.mode-distance-time [data-field="speed"] { order: 4; }
 
-  .converter-grid.mode-pace-distance [data-field="pace"] { order: 1; }
-  .converter-grid.mode-pace-distance [data-field="distance"] { order: 2; }
-  .converter-grid.mode-pace-distance [data-field="time"] { order: 3; }
-  .converter-grid.mode-pace-distance [data-field="speed"] { order: 4; }
+  .converter-grid.mode-distance-pace [data-field="distance"] { order: 1; }
+  .converter-grid.mode-distance-pace [data-field="pace"] { order: 2; }
+  .converter-grid.mode-distance-pace [data-field="time"] { order: 3; }
+  .converter-grid.mode-distance-pace [data-field="speed"] { order: 4; }
 
   .converter-grid.mode-pace-time [data-field="pace"] { order: 1; }
   .converter-grid.mode-pace-time [data-field="time"] { order: 2; }
@@ -247,8 +247,8 @@
     display: flex;
   }
 
-  .converter-grid.mode-pace-distance [data-field="pace"] .shortcut-buttons[data-shortcuts="pace"],
-  .converter-grid.mode-pace-distance [data-field="distance"] .shortcut-buttons[data-shortcuts="distance"] {
+  .converter-grid.mode-distance-pace [data-field="pace"] .shortcut-buttons[data-shortcuts="pace"],
+  .converter-grid.mode-distance-pace [data-field="distance"] .shortcut-buttons[data-shortcuts="distance"] {
     display: flex;
   }
 
@@ -314,7 +314,7 @@
 
   function updateModeClass() {
     const mode = runMode?.value || 'distance-time';
-    runGrid?.classList.remove('mode-distance-time', 'mode-pace-distance', 'mode-pace-time', 'mode-speed-time', 'mode-speed-distance');
+    runGrid?.classList.remove('mode-distance-time', 'mode-distance-pace', 'mode-pace-time', 'mode-speed-time', 'mode-speed-distance');
     runGrid?.classList.add(`mode-${mode}`);
   }
 
@@ -376,7 +376,7 @@
       runSeconds.readOnly = false;
       runPace.readOnly = true;
       runSpeed.readOnly = true;
-    } else if (mode === 'pace-distance') {
+    } else if (mode === 'distance-pace') {
       runPace.readOnly = false;
       runDistance.readOnly = false;
       runHours.readOnly = true;
@@ -437,7 +437,7 @@
         speed = (distanceInKm * 1000) / timeInSeconds;
       }
       runSpeed.value = speed.toFixed(2);
-    } else if (mode === 'pace-distance') {
+    } else if (mode === 'distance-pace') {
       // Inputs: pace, distance → Calculate: time, speed
       if (!distanceInKm || distanceInKm <= 0) {
         runHours.value = '';

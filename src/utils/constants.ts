@@ -18,7 +18,7 @@ export type PaceUnit = 'min/km' | 'min/mi' | 'min/100m' | 'min/100yd';
 // Conversion modes
 export type ConversionMode = 
   | 'distance-time'
-  | 'pace-distance'
+  | 'distance-pace'
   | 'pace-time'
   | 'speed-time'
   | 'speed-distance';
