@@ -65,9 +65,54 @@ const baseUrl = import.meta.env.BASE_URL;
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
       }
+
+      /* Simple site nav */
+      .site-nav {
+        background: #ffffff;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav-brand {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+      }
+      .nav-links a {
+        color: var(--text-color);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .nav-links a:hover {
+        color: var(--primary-color);
+      }
     </style>
   </head>
   <body>
+    <nav class="site-nav">
+      <div class="nav-container">
+        <a href={baseUrl} class="nav-brand">Pace Converter</a>
+        <div class="nav-links">
+          <a href={`${baseUrl}/running`}>Running</a>
+          <a href={`${baseUrl}/swimming`}>Swimming</a>
+          <a href={`${baseUrl}/triathlon`}>Triathlon</a>
+        </div>
+      </div>
+    </nav>
     <slot />
   </body>
 </html>

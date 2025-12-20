@@ -1,0 +1,548 @@
+---
+import { TRIATHLON_CATEGORIES, TRIATHLON_CATEGORY_LIST, type TriathlonCategory } from '../utils/triathlon';
+const categoriesJson = JSON.stringify(TRIATHLON_CATEGORIES);
+const categoryKeys = TRIATHLON_CATEGORY_LIST;
+---
+
+<div class="converter-section">
+  <h2>🏊🚴🏃 Triathlon Timing</h2>
+
+  <div class="top-controls">
+    <div class="mode-select">
+      <label for="tri-category">Distance Category</label>
+      <select id="tri-category">
+        {categoryKeys.map(({ key, label }) => (
+          <option value={key}>{label}</option>
+        ))}
+      </select>
+    </div>
+    <div class="unit-select">
+      <label for="unit-system">Unit System</label>
+      <select id="unit-system">
+        <option value="metric">Metric (km, m)</option>
+        <option value="imperial">Imperial (mi, yd)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="disciplines-grid">
+    <!-- Swimming -->
+    <div class="discipline-group">
+      <h3>🏊 Swimming</h3>
+      <div class="input-group">
+        <label id="swim-distance-label">Distance (m)</label>
+        <input type="number" id="swim-distance" min="0" step="1" placeholder="0" />
+        <small class="error" id="swim-distance-error"></small>
+      </div>
+      <div class="input-group">
+        <div class="toggle-row">
+          <label><input type="radio" name="swim-metric" value="pace" checked /> Pace</label>
+          <label><input type="radio" name="swim-metric" value="speed" /> Speed</label>
+        </div>
+        <div class="input-with-unit">
+          <input type="text" id="swim-input" placeholder="2:30" />
+          <span id="swim-unit">min/100m</span>
+        </div>
+        <small class="error" id="swim-error"></small>
+      </div>
+    </div>
+
+    <!-- Cycling -->
+    <div class="discipline-group">
+      <h3>🚴 Cycling</h3>
+      <div class="input-group">
+        <label id="bike-distance-label">Distance (km)</label>
+        <input type="number" id="bike-distance" min="0" step="0.1" placeholder="0" />
+        <small class="error" id="bike-distance-error"></small>
+      </div>
+      <div class="input-group">
+        <div class="toggle-row">
+          <label><input type="radio" name="bike-metric" value="pace" /> Pace</label>
+          <label><input type="radio" name="bike-metric" value="speed" checked /> Speed</label>
+        </div>
+        <div class="input-with-unit">
+          <input type="text" id="bike-input" placeholder="30.0" />
+          <span id="bike-unit">km/h</span>
+        </div>
+        <small class="error" id="bike-error"></small>
+      </div>
+    </div>
+
+    <!-- Running -->
+    <div class="discipline-group">
+      <h3>🏃 Running</h3>
+      <div class="input-group">
+        <label id="run-distance-label">Distance (km)</label>
+        <input type="number" id="run-distance" min="0" step="0.1" placeholder="0" />
+        <small class="error" id="run-distance-error"></small>
+      </div>
+      <div class="input-group">
+        <div class="toggle-row">
+          <label><input type="radio" name="run-metric" value="pace" checked /> Pace</label>
+          <label><input type="radio" name="run-metric" value="speed" /> Speed</label>
+        </div>
+        <div class="input-with-unit">
+          <input type="text" id="run-input" placeholder="5:00" />
+          <span id="run-unit">min/km</span>
+        </div>
+        <small class="error" id="run-error"></small>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <button type="button" id="tri-reset">Reset</button>
+  </div>
+
+  <div class="results-section">
+    <h3>Results</h3>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Discipline</th>
+          <th>Distance</th>
+          <th>Metric</th>
+          <th>Split time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Swimming</td>
+          <td><span id="swim-distance-display">-</span></td>
+          <td><span id="swim-metric-display">-</span></td>
+          <td><span id="swim-time-display">-</span></td>
+        </tr>
+        <tr>
+          <td>Cycling</td>
+          <td><span id="bike-distance-display">-</span></td>
+          <td><span id="bike-metric-display">-</span></td>
+          <td><span id="bike-time-display">-</span></td>
+        </tr>
+        <tr>
+          <td>Running</td>
+          <td><span id="run-distance-display">-</span></td>
+          <td><span id="run-metric-display">-</span></td>
+          <td><span id="run-time-display">-</span></td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3">Total time</td>
+          <td><span id="total-time-display">-</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .converter-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin: 0 auto 2rem;
+    max-width: 900px;
+  }
+
+  .top-controls {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .mode-select, .unit-select {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .disciplines-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .discipline-group {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+  }
+
+  .discipline-group h3 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-group:last-child {
+    margin-bottom: 0;
+  }
+
+  input[type="number"], input[type="text"], select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: white;
+  }
+
+  .toggle-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .input-with-unit {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .input-with-unit input {
+    flex: 1;
+  }
+
+  .input-with-unit span {
+    color: #6b7280;
+    font-size: 0.9rem;
+    min-width: 90px;
+    text-align: right;
+  }
+
+  .error {
+    color: #ef4444;
+    font-size: 0.8rem;
+    min-height: 1rem;
+  }
+
+  .actions-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  button#tri-reset {
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  button#tri-reset:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .results-section h3 {
+    margin-bottom: 0.75rem;
+  }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .results-table th, .results-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .total-row td {
+    font-weight: 600;
+    background: #f9fafb;
+  }
+
+  @media (max-width: 640px) {
+    .converter-section { 
+      padding: 1.5rem 1rem;
+    }
+    .disciplines-grid {
+      max-width: 100%;
+    }
+    .discipline-group {
+      padding: 1rem;
+    }
+    .top-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .mode-select, .unit-select {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+
+<script define:vars={{ categoriesJson }}>
+  // Inject server data
+  const TRIATHLON_CATEGORIES = JSON.parse(categoriesJson);
+  const SECONDS_PER_HOUR = 3600;
+  const SECONDS_PER_MINUTE = 60;
+  const M_TO_YD = 1.09361;
+  const KM_TO_MI = 0.621371;
+  
+  function formatHMS(total) {
+    if (!total || total <= 0 || !isFinite(total)) return '-';
+    const h = Math.floor(total / SECONDS_PER_HOUR);
+    const m = Math.floor((total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+    const s = Math.floor(total % SECONDS_PER_MINUTE);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // Local pace parser (mm:ss → seconds)
+  function parsePace(val) {
+    const v = (val || '').trim();
+    if (!v) return null;
+    const parts = v.split(':');
+    if (parts.length !== 2) return null;
+    const m = parseInt(parts[0]);
+    const s = parseInt(parts[1]);
+    if (isNaN(m) || isNaN(s)) return null;
+    const total = m * SECONDS_PER_MINUTE + s;
+    return total > 0 ? total : null;
+  }
+
+  function updateUnitLabels() {
+    const isImperial = unitSystemSelect.value === 'imperial';
+    swimDistLabel.textContent = isImperial ? 'Swimming distance (yd)' : 'Swimming distance (m)';
+    bikeDistLabel.textContent = isImperial ? 'Cycling distance (mi)' : 'Cycling distance (km)';
+    runDistLabel.textContent = isImperial ? 'Running distance (mi)' : 'Running distance (km)';
+  }
+
+  // DOM refs
+  const categorySelect = document.getElementById('tri-category');
+  const unitSystemSelect = document.getElementById('unit-system');
+  const swimDistance = document.getElementById('swim-distance');
+  const bikeDistance = document.getElementById('bike-distance');
+  const runDistance = document.getElementById('run-distance');
+
+  const swimDistLabel = document.getElementById('swim-distance-label');
+  const bikeDistLabel = document.getElementById('bike-distance-label');
+  const runDistLabel = document.getElementById('run-distance-label');
+
+  const swimMetricRadios = Array.from(document.querySelectorAll('input[name="swim-metric"]'));
+  const bikeMetricRadios = Array.from(document.querySelectorAll('input[name="bike-metric"]'));
+  const runMetricRadios = Array.from(document.querySelectorAll('input[name="run-metric"]'));
+
+  const swimInput = document.getElementById('swim-input');
+  const bikeInput = document.getElementById('bike-input');
+  const runInput = document.getElementById('run-input');
+
+  const swimUnit = document.getElementById('swim-unit');
+  const bikeUnit = document.getElementById('bike-unit');
+  const runUnit = document.getElementById('run-unit');
+
+  const swimErr = document.getElementById('swim-error');
+  const bikeErr = document.getElementById('bike-error');
+  const runErr = document.getElementById('run-error');
+
+  const swimDistErr = document.getElementById('swim-distance-error');
+  const bikeDistErr = document.getElementById('bike-distance-error');
+  const runDistErr = document.getElementById('run-distance-error');
+
+  const swimDistDisplay = document.getElementById('swim-distance-display');
+  const bikeDistDisplay = document.getElementById('bike-distance-display');
+  const runDistDisplay = document.getElementById('run-distance-display');
+
+  const swimMetricDisplay = document.getElementById('swim-metric-display');
+  const bikeMetricDisplay = document.getElementById('bike-metric-display');
+  const runMetricDisplay = document.getElementById('run-metric-display');
+
+  const swimTimeDisplay = document.getElementById('swim-time-display');
+  const bikeTimeDisplay = document.getElementById('bike-time-display');
+  const runTimeDisplay = document.getElementById('run-time-display');
+  const totalTimeDisplay = document.getElementById('total-time-display');
+
+  const resetBtn = document.getElementById('tri-reset');
+
+  function getSelected(radios) {
+    const r = radios.find(x => x.checked);
+    return r?.value || 'pace';
+  }
+
+  function setCategoryDefaults(cat, resetMetrics = false) {
+    const d = TRIATHLON_CATEGORIES[cat];
+    const isImperial = unitSystemSelect.value === 'imperial';
+    
+    // Set distances with conversion if imperial
+    swimDistance.value = isImperial ? String((d.swim_m * M_TO_YD).toFixed(0)) : String(d.swim_m);
+    bikeDistance.value = isImperial ? String((d.bike_km * KM_TO_MI).toFixed(2)) : String(d.bike_km);
+    runDistance.value = isImperial ? String((d.run_km * KM_TO_MI).toFixed(2)) : String(d.run_km);
+    
+    if (resetMetrics) {
+      // Clear metrics only when explicitly resetting
+      swimInput.value = '';
+      bikeInput.value = '';
+      runInput.value = '';
+    }
+    swimErr.textContent = '';
+    bikeErr.textContent = '';
+    runErr.textContent = '';
+    swimDistErr.textContent = '';
+    bikeDistErr.textContent = '';
+    runDistErr.textContent = '';
+    updateUnitLabels();
+    updateUnits();
+    calculateAll();
+  }
+
+  function updateUnits() {
+    const isImperial = unitSystemSelect.value === 'imperial';
+    
+    // Swimming
+    const swimType = getSelected(swimMetricRadios);
+    swimUnit.textContent = swimType === 'pace' ? (isImperial ? 'min/100yd' : 'min/100m') : (isImperial ? 'mph' : 'km/h');
+    swimInput.placeholder = swimType === 'pace' ? 'mm:ss' : (isImperial ? '0.0' : '0.0');
+    
+    // Cycling
+    const bikeType = getSelected(bikeMetricRadios);
+    bikeUnit.textContent = bikeType === 'speed' ? (isImperial ? 'mph' : 'km/h') : (isImperial ? 'min/mi' : 'min/km');
+    bikeInput.placeholder = bikeType === 'speed' ? (isImperial ? '0.0' : '0.0') : 'mm:ss';
+    
+    // Running
+    const runType = getSelected(runMetricRadios);
+    runUnit.textContent = runType === 'pace' ? (isImperial ? 'min/mi' : 'min/km') : (isImperial ? 'mph' : 'km/h');
+    runInput.placeholder = runType === 'pace' ? 'mm:ss' : (isImperial ? '0.0' : '0.0');
+  }
+
+  function parseSpeed(input) {
+    const v = parseFloat((input || '').replace(',', '.'));
+    if (isNaN(v) || v <= 0) return null;
+    return v;
+  }
+
+  function calculateSwim() {
+    const isImperial = unitSystemSelect.value === 'imperial';
+    let distInput = parseFloat(swimDistance.value);
+    if (isNaN(distInput) || distInput <= 0) { swimDistErr.textContent = 'Enter a valid distance'; return null; } else { swimDistErr.textContent = ''; }
+    
+    // Convert to meters for calculation
+    const distM = isImperial ? distInput / M_TO_YD : distInput;
+    const type = getSelected(swimMetricRadios);
+    swimMetricDisplay.textContent = type === 'pace' ? `${swimInput.value || ''} ${swimUnit.textContent}` : `${swimInput.value || ''} ${swimUnit.textContent}`;
+    swimDistDisplay.textContent = isImperial ? `${distInput.toFixed(0)} yd` : `${distM.toFixed(0)} m`;
+
+    if (type === 'pace') {
+      const p = parsePace(swimInput.value || '');
+      if (p == null || p <= 0) { swimErr.textContent = 'Invalid pace mm:ss'; return null; } else { swimErr.textContent = ''; }
+      const divisor = isImperial ? 100 / M_TO_YD : 100; // per 100yd or per 100m
+      const total = (distM / divisor) * p;
+      swimTimeDisplay.textContent = formatHMS(total);
+      return total;
+    } else {
+      const spd = parseSpeed(swimInput.value || '');
+      if (spd == null) { swimErr.textContent = 'Invalid speed'; return null; } else { swimErr.textContent = ''; }
+      // Convert speed to m/s
+      const mps = isImperial ? (spd * 1609.34) / 3600 : (spd * 1000) / 3600;
+      const total = distM / mps;
+      swimTimeDisplay.textContent = formatHMS(total);
+      return total;
+    }
+  }
+
+  function calculateBike() {
+    const isImperial = unitSystemSelect.value === 'imperial';
+    let distInput = parseFloat(bikeDistance.value);
+    if (isNaN(distInput) || distInput <= 0) { bikeDistErr.textContent = 'Enter a valid distance'; return null; } else { bikeDistErr.textContent = ''; }
+    
+    // Convert to km for calculation
+    const distKm = isImperial ? distInput / KM_TO_MI : distInput;
+    const type = getSelected(bikeMetricRadios);
+    bikeMetricDisplay.textContent = type === 'speed' ? `${bikeInput.value || ''} ${swimUnit.textContent}` : `${bikeInput.value || ''} ${swimUnit.textContent}`;
+    bikeDistDisplay.textContent = isImperial ? `${distInput.toFixed(2)} mi` : `${distKm.toFixed(2)} km`;
+
+    if (type === 'speed') {
+      const spd = parseSpeed(bikeInput.value || '');
+      if (spd == null) { bikeErr.textContent = 'Invalid speed'; return null; } else { bikeErr.textContent = ''; }
+      // Convert to km/h for calculation
+      const kmh = isImperial ? spd / KM_TO_MI : spd;
+      const total = (distKm / kmh) * 3600;
+      bikeTimeDisplay.textContent = formatHMS(total);
+      return total;
+    } else {
+      const p = parsePace(bikeInput.value || '');
+      if (p == null || p <= 0) { bikeErr.textContent = 'Invalid pace mm:ss'; return null; } else { bikeErr.textContent = ''; }
+      const total = distKm * p;
+      bikeTimeDisplay.textContent = formatHMS(total);
+      return total;
+    }
+  }
+
+  function calculateRun() {
+    const isImperial = unitSystemSelect.value === 'imperial';
+    let distInput = parseFloat(runDistance.value);
+    if (isNaN(distInput) || distInput <= 0) { runDistErr.textContent = 'Enter a valid distance'; return null; } else { runDistErr.textContent = ''; }
+    
+    // Convert to km for calculation
+    const distKm = isImperial ? distInput / KM_TO_MI : distInput;
+    const type = getSelected(runMetricRadios);
+    runMetricDisplay.textContent = type === 'pace' ? `${runInput.value || ''} ${runUnit.textContent}` : `${runInput.value || ''} ${runUnit.textContent}`;
+    runDistDisplay.textContent = isImperial ? `${distInput.toFixed(2)} mi` : `${distKm.toFixed(2)} km`;
+
+    if (type === 'pace') {
+      const p = parsePace(runInput.value || '');
+      if (p == null || p <= 0) { runErr.textContent = 'Invalid pace mm:ss'; return null; } else { runErr.textContent = ''; }
+      const total = distKm * p;
+      runTimeDisplay.textContent = formatHMS(total);
+      return total;
+    } else {
+      const spd = parseSpeed(runInput.value || '');
+      if (spd == null) { runErr.textContent = 'Invalid speed'; return null; } else { runErr.textContent = ''; }
+      // Convert to km/h for calculation
+      const kmh = isImperial ? spd / KM_TO_MI : spd;
+      const total = (distKm / kmh) * 3600;
+      runTimeDisplay.textContent = formatHMS(total);
+      return total;
+    }
+  }
+
+  function calculateAll() {
+    const s = calculateSwim() || 0;
+    const b = calculateBike() || 0;
+    const r = calculateRun() || 0;
+    const total = s + b + r;
+    totalTimeDisplay.textContent = formatHMS(total > 0 ? total : 0);
+  }
+
+  function init() {
+    // Set initial category
+    setCategoryDefaults((categorySelect.value || 'M'));
+
+    // Listeners
+    categorySelect.addEventListener('change', () => setCategoryDefaults(categorySelect.value, false));
+    unitSystemSelect.addEventListener('change', () => setCategoryDefaults(categorySelect.value, false));
+
+    [swimDistance, bikeDistance, runDistance].forEach(inp => inp.addEventListener('input', calculateAll));
+
+    [...swimMetricRadios, ...bikeMetricRadios, ...runMetricRadios].forEach(r => r.addEventListener('change', () => { updateUnits(); calculateAll(); }));
+    [swimInput, bikeInput, runInput].forEach(inp => inp.addEventListener('input', calculateAll));
+
+    resetBtn.addEventListener('click', () => setCategoryDefaults((categorySelect.value || 'M'), true));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>
