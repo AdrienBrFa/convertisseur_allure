@@ -1,0 +1,11 @@
+# Robots.txt for Pace Converter
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemaps
+Sitemap: https://AdrienBrFa.github.io/convertisseur_allure/sitemap.xml
+
+# Crawl delay (optional - in seconds)
+Crawl-delay: 1
